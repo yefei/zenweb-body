@@ -1,5 +1,5 @@
 import { Core } from '@zenweb/core';
-import { Options } from 'koa-bodyparser';
-export { Options } from 'koa-bodyparser';
+import { IKoaBodyOptions } from 'koa-body';
+export { IKoaBodyOptions } from 'koa-body';
 
-export declare function setup(core: Core, options?: Options): void;
+export declare function setup(core: Core, options?: IKoaBodyOptions): void;

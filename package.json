@@ -31,6 +31,6 @@
     "koa": "^2.13.1"
   },
   "dependencies": {
-    "koa-bodyparser": "^4.3.0"
+    "koa-body": "^4.2.0"
   }
 }
