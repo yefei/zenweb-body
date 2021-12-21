@@ -1,12 +1,15 @@
 {
   "name": "@zenweb/body",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Zenweb Body module",
   "exports": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "scripts": {
     "prepublishOnly": "rm -fr dist && tsc"
   },
+  "files": [
+    "dist"
+  ],
   "author": {
     "name": "YeFei",
     "email": "316606233@qq.com"
