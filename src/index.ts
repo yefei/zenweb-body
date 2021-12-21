@@ -76,8 +76,8 @@ function body(opt?: BodyOption) {
         }
       } catch (err) {
         ctx.log.child({ err }).error('request body error');
-        err.status = 400;
-        err.body = 'request body error';
+        ctx.status = 400;
+        ctx.body = 'request body error';
         return;
       }
     }
