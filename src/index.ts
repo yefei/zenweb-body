@@ -1,3 +1,4 @@
+import '@zenweb/log';
 import * as Koa from 'koa';
 import { Core } from '@zenweb/core';
 import * as coBody from 'co-body';
@@ -74,9 +75,10 @@ function body(opt?: BodyOption) {
           ctx.request.bodyType = 'multipart';
         }
       } catch (err) {
+        ctx.log.child({ err }).error('request body error');
         err.status = 400;
         err.body = 'request body error';
-        throw err;
+        return;
       }
     }
     return next();

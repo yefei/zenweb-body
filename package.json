@@ -34,7 +34,8 @@
     "@types/co-body": "^6.1.0",
     "@types/debug": "^4.1.7",
     "@types/koa": "^2.13.4",
-    "@zenweb/core": "^2.1.1"
+    "@zenweb/core": "^2.1.1",
+    "@zenweb/log": "^2.2.0"
   },
   "dependencies": {
     "bytes": "^3.1.1",
