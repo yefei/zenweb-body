@@ -5,8 +5,7 @@
   "exports": "./dist/index.js",
   "typings": "./dist/index.d.ts",
   "scripts": {
-    "prepublishOnly": "tsc",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "prepublishOnly": "rm -fr dist && tsc"
   },
   "author": {
     "name": "YeFei",
