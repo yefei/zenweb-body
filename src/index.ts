@@ -52,36 +52,39 @@ function body(opt?: BodyOption) {
 
   debug('option: %O', opt);
 
-  const disabled = !opt.form && !opt.json && !opt.text && !opt.multipart;
-
   return async function body(ctx: Koa.Context, next: Koa.Next) {
-    if (disabled) {
-      return next();
-    }
     if (opt.methods.includes(ctx.method.toUpperCase())) {
-      if (typeof opt.json === 'object' && ctx.is('json')) {
-        ctx.request.body = await coBody.json(ctx, opt.json);
-        ctx.request.bodyType = 'json';
-      }
-      else if (typeof opt.form === 'object' && ctx.is('urlencoded')) {
-        ctx.request.body = await coBody.form(ctx, opt.form);
-        ctx.request.bodyType = 'form';
-      }
-      else if (typeof opt.text === 'object' && ctx.is('text/*')) {
-        ctx.request.body = await coBody.text(ctx, opt.text);
-        ctx.request.bodyType = 'text';
-      }
-      else if (typeof opt.multipart === 'object' && ctx.is('multipart')) {
-        const { fields, files } = await formidableParse(ctx, opt.multipart);
-        ctx.request.body = fields;
-        ctx.request.files = files;
-        ctx.request.bodyType = 'multipart';
+      try {
+        if (typeof opt.json === 'object' && ctx.is('json')) {
+          ctx.request.body = await coBody.json(ctx, opt.json);
+          ctx.request.bodyType = 'json';
+        }
+        else if (typeof opt.form === 'object' && ctx.is('urlencoded')) {
+          ctx.request.body = await coBody.form(ctx, opt.form);
+          ctx.request.bodyType = 'form';
+        }
+        else if (typeof opt.text === 'object' && ctx.is('text/*')) {
+          ctx.request.body = await coBody.text(ctx, opt.text);
+          ctx.request.bodyType = 'text';
+        }
+        else if (typeof opt.multipart === 'object' && ctx.is('multipart')) {
+          const { fields, files } = await formidableParse(ctx, opt.multipart);
+          ctx.request.body = fields;
+          ctx.request.files = files;
+          ctx.request.bodyType = 'multipart';
+        }
+      } catch (err) {
+        err.status = 400;
+        err.body = 'request body error';
+        throw err;
       }
     }
+    return next();
   }
 }
 
 export function setup(core: Core, option?: BodyOption) {
+  core.check('@zenweb/log');
   core.use(body(option));
 }
 
