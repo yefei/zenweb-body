@@ -1,47 +1,17 @@
 import * as Koa from 'koa';
 import { Core } from '@zenweb/core';
-import { Files } from 'formidable';
+import * as coBody from 'co-body';
+import * as formidable from 'formidable';
+import Debug from 'debug';
+import { parse as bytesParse } from 'bytes';
+import { BaseOption, BodyOption, MultipartOption } from './types';
+export * from './types';
 
-interface BaseOption {
-  /** 编码，默认: 'utf8' */
-  encoding?: string;
-
-  /** 大小限制，默认: 1mb */
-  limit?: string;
-}
-
-interface JsonOption extends BaseOption {
-  /** 严格模式, 根必须为 {} 或 []，默认: true */
-  strict?: boolean;
-}
-
-interface FormOption extends BaseOption {}
-interface TextOption extends BaseOption {}
-
-interface MultipartOption {
-
-}
-
-type Method = string | 'POST' | 'PUT' | 'PATCH' | 'GET' | 'HEAD' | 'DELETE';
-
-export interface BodyOption {
-  /** 解析 json 请求，默认 true */
-  json?: JsonOption | boolean;
-
-  /** 解析表单请求，默认 true */
-  form?: FormOption | boolean;
-
-  /** 解析文本请求，默认 true */
-  text?: TextOption | boolean;
-
-  /** 支持上传文件，默认 true */
-  multipart?: MultipartOption | boolean;
-
-  /** 处理请求类型，默认 ['POST', 'PUT', 'PATCH'] */
-  methods?: Method[];
-}
+const debug = Debug('zenweb:body');
 
 const defaultOption: BodyOption = {
+  encoding: 'utf-8',
+  limit: '1mb',
   json: true,
   form: true,
   text: true,
@@ -49,21 +19,63 @@ const defaultOption: BodyOption = {
   methods: ['POST', 'PUT', 'PATCH'],
 };
 
-const defaultBaseOption: BaseOption = {
-  encoding: 'utf8',
-  limit: '1mb',
-};
+type formidableResult = { fields: formidable.Fields, files: formidable.Files };
+
+function formidableParse(ctx: Koa.Context, opt: MultipartOption): Promise<formidableResult> {
+  const form = formidable(opt);
+  return new Promise((resolve, reject) => {
+    form.parse(ctx.req, (err, fields, files) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+      resolve({ fields, files });
+    });
+  });
+}
 
 function body(opt?: BodyOption) {
   opt = Object.assign({}, defaultOption, opt);
+  const defaultBaseOption: BaseOption = {
+    encoding: opt.encoding,
+    limit: opt.limit,
+  };
+  if (opt.json) opt.json = Object.assign({ strict: true }, defaultBaseOption, opt.json);
+  if (opt.form) opt.form = Object.assign({}, defaultBaseOption, opt.form);
+  if (opt.text) opt.text = Object.assign({}, defaultBaseOption, opt.text);
+  if (opt.multipart) {
+    opt.multipart = Object.assign({
+      encoding: opt.encoding,
+      maxFieldsSize: bytesParse(opt.limit),
+    }, opt.multipart);
+  }
+
+  debug('option: %O', opt);
+
   const disabled = !opt.form && !opt.json && !opt.text && !opt.multipart;
-  return function body(ctx: Koa.Context, next: Koa.Next) {
+
+  return async function body(ctx: Koa.Context, next: Koa.Next) {
     if (disabled) {
       return next();
     }
     if (opt.methods.includes(ctx.method.toUpperCase())) {
-      if (opt.json && ctx.is('json')) {
-        
+      if (typeof opt.json === 'object' && ctx.is('json')) {
+        ctx.request.body = await coBody.json(ctx, opt.json);
+        ctx.request.bodyType = 'json';
+      }
+      else if (typeof opt.form === 'object' && ctx.is('urlencoded')) {
+        ctx.request.body = await coBody.form(ctx, opt.form);
+        ctx.request.bodyType = 'form';
+      }
+      else if (typeof opt.text === 'object' && ctx.is('text/*')) {
+        ctx.request.body = await coBody.text(ctx, opt.text);
+        ctx.request.bodyType = 'text';
+      }
+      else if (typeof opt.multipart === 'object' && ctx.is('multipart')) {
+        const { fields, files } = await formidableParse(ctx, opt.multipart);
+        ctx.request.body = fields;
+        ctx.request.files = files;
+        ctx.request.bodyType = 'multipart';
       }
     }
   }
@@ -76,6 +88,7 @@ export function setup(core: Core, option?: BodyOption) {
 declare module 'koa' {
   interface Request {
     body: any;
-    files: Files;
+    bodyType: 'json' | 'form' | 'text' | 'multipart';
+    files: formidable.Files;
   }
 }
