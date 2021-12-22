@@ -3,7 +3,7 @@
   "version": "2.2.3",
   "description": "Zenweb Body module",
   "exports": "./dist/index.js",
-  "typings": "./dist/index.d.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
     "prepublishOnly": "tsc --build --clean && tsc"
   },
@@ -33,12 +33,12 @@
     "@types/bytes": "^3.1.1",
     "@types/co-body": "^6.1.0",
     "@types/debug": "^4.1.7",
-    "@types/formidable": "^2.0.0",
     "@types/koa": "^2.13.4",
     "@zenweb/core": "^2.1.1",
     "@zenweb/log": "^2.2.0"
   },
   "dependencies": {
+    "@types/formidable": "^2.0.0",
     "bytes": "^3.1.1",
     "co-body": "^6.1.0",
     "debug": "^4.3.3",
