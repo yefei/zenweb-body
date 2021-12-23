@@ -70,6 +70,9 @@ export default function setup(opt?: BodyOption): SetupFunction {
             ctx.request.body = fields;
             ctx.request.files = files;
             ctx.request.bodyType = 'multipart';
+          } else {
+            ctx.request.body = {};
+            ctx.request.bodyType = 'none';
           }
         } catch (err) {
           ctx.log.child({ err }).error('request body error');
@@ -86,7 +89,7 @@ export default function setup(opt?: BodyOption): SetupFunction {
 declare module 'koa' {
   interface Request {
     body: any;
-    bodyType: 'json' | 'form' | 'text' | 'multipart';
+    bodyType: 'json' | 'form' | 'text' | 'multipart' | 'none';
     files: formidable.Files;
   }
 }
