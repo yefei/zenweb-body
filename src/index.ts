@@ -1,14 +1,11 @@
 import '@zenweb/log';
 import * as Koa from 'koa';
-import { Core } from '@zenweb/core';
+import { SetupFunction } from '@zenweb/core';
 import * as coBody from 'co-body';
 import * as formidable from 'formidable';
-import Debug from 'debug';
 import { parse as bytesParse } from 'bytes';
 import { BaseOption, BodyOption, MultipartOption } from './types';
 export * from './types';
-
-const debug = Debug('zenweb:body');
 
 const defaultOption: BodyOption = {
   encoding: 'utf-8',
@@ -35,7 +32,7 @@ function formidableParse(ctx: Koa.Context, opt: MultipartOption): Promise<formid
   });
 }
 
-function body(opt?: BodyOption) {
+export default function setup(opt?: BodyOption): SetupFunction {
   opt = Object.assign({}, defaultOption, opt);
   const defaultBaseOption: BaseOption = {
     encoding: opt.encoding,
@@ -50,44 +47,40 @@ function body(opt?: BodyOption) {
       maxFieldsSize: bytesParse(opt.limit),
     }, opt.multipart);
   }
-
-  debug('option: %O', opt);
-
-  return async function body(ctx: Koa.Context, next: Koa.Next) {
-    if (opt.methods.includes(ctx.method.toUpperCase())) {
-      try {
-        if (typeof opt.json === 'object' && ctx.is('json')) {
-          ctx.request.body = await coBody.json(ctx, opt.json);
-          ctx.request.bodyType = 'json';
+  return function body(setup) {
+    setup.debug('option: %o', opt);
+    setup.checkContextProperty('log');
+    setup.middleware(async function body(ctx, next) {
+      if (opt.methods.includes(ctx.method.toUpperCase())) {
+        try {
+          if (typeof opt.json === 'object' && ctx.is('json')) {
+            ctx.request.body = await coBody.json(ctx, opt.json);
+            ctx.request.bodyType = 'json';
+          }
+          else if (typeof opt.form === 'object' && ctx.is('urlencoded')) {
+            ctx.request.body = await coBody.form(ctx, opt.form);
+            ctx.request.bodyType = 'form';
+          }
+          else if (typeof opt.text === 'object' && ctx.is('text/*')) {
+            ctx.request.body = await coBody.text(ctx, opt.text);
+            ctx.request.bodyType = 'text';
+          }
+          else if (typeof opt.multipart === 'object' && ctx.is('multipart')) {
+            const { fields, files } = await formidableParse(ctx, opt.multipart);
+            ctx.request.body = fields;
+            ctx.request.files = files;
+            ctx.request.bodyType = 'multipart';
+          }
+        } catch (err) {
+          ctx.log.child({ err }).error('request body error');
+          ctx.status = 400;
+          ctx.body = 'request body error';
+          return;
         }
-        else if (typeof opt.form === 'object' && ctx.is('urlencoded')) {
-          ctx.request.body = await coBody.form(ctx, opt.form);
-          ctx.request.bodyType = 'form';
-        }
-        else if (typeof opt.text === 'object' && ctx.is('text/*')) {
-          ctx.request.body = await coBody.text(ctx, opt.text);
-          ctx.request.bodyType = 'text';
-        }
-        else if (typeof opt.multipart === 'object' && ctx.is('multipart')) {
-          const { fields, files } = await formidableParse(ctx, opt.multipart);
-          ctx.request.body = fields;
-          ctx.request.files = files;
-          ctx.request.bodyType = 'multipart';
-        }
-      } catch (err) {
-        ctx.log.child({ err }).error('request body error');
-        ctx.status = 400;
-        ctx.body = 'request body error';
-        return;
       }
-    }
-    return next();
+      return next();
+    });
   }
-}
-
-export function setup(core: Core, option?: BodyOption) {
-  core.check('@zenweb/log');
-  core.use(body(option));
 }
 
 declare module 'koa' {
