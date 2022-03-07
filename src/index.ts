@@ -5,6 +5,7 @@ import * as coBody from 'co-body';
 import * as formidable from 'formidable';
 import { parse as bytesParse } from 'bytes';
 import { BaseOption, BodyOption, MultipartOption } from './types';
+import { XMLParser } from 'fast-xml-parser';
 export * from './types';
 
 const defaultOption: BodyOption = {
@@ -13,6 +14,7 @@ const defaultOption: BodyOption = {
   json: true,
   form: true,
   text: true,
+  xml: false,
   multipart: true,
   methods: ['POST', 'PUT', 'PATCH'],
 };
@@ -47,6 +49,10 @@ export default function setup(opt?: BodyOption): SetupFunction {
       maxFieldsSize: bytesParse(opt.limit),
     }, opt.multipart);
   }
+  if (opt.xml) {
+    var xmlparser = new XMLParser(typeof opt.xml === 'object' ? opt.xml : undefined);
+    var xmlBaseOption = Object.assign({}, defaultBaseOption, opt.xml);
+  }
   return function body(setup) {
     setup.debug('option: %o', opt);
     setup.checkContextProperty('log');
@@ -60,6 +66,10 @@ export default function setup(opt?: BodyOption): SetupFunction {
           else if (typeof opt.form === 'object' && ctx.is('urlencoded')) {
             ctx.request.body = await coBody.form(ctx, opt.form);
             ctx.request.bodyType = 'form';
+          }
+          else if (xmlparser && ctx.is('xml')) {
+            ctx.request.body = xmlparser.parse(await coBody.text(ctx, xmlBaseOption));
+            ctx.request.bodyType = 'xml';
           }
           else if (typeof opt.text === 'object' && ctx.is('text/*')) {
             ctx.request.body = await coBody.text(ctx, opt.text);
@@ -76,7 +86,7 @@ export default function setup(opt?: BodyOption): SetupFunction {
           }
         } catch (err) {
           ctx.log.child({ err }).error('request body error');
-          ctx.status = 400;
+          ctx.status = 415;
           ctx.body = 'request body error';
           return;
         }
@@ -89,7 +99,7 @@ export default function setup(opt?: BodyOption): SetupFunction {
 declare module 'koa' {
   interface Request {
     body: any;
-    bodyType: 'json' | 'form' | 'text' | 'multipart' | 'none';
+    bodyType: 'json' | 'form' | 'xml' | 'text' | 'multipart' | 'none';
     files: formidable.Files;
   }
 }

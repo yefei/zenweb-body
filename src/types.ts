@@ -1,4 +1,5 @@
 import { Options as FormidableOptions } from 'formidable';
+import { X2jOptionsOptional } from 'fast-xml-parser';
 
 export type Method = string | 'POST' | 'PUT' | 'PATCH' | 'GET' | 'HEAD' | 'DELETE';
 
@@ -36,6 +37,8 @@ export interface MultipartOption extends FormidableOptions {
   maxFieldsSize: number;
 }
 
+export interface XMLOption extends BaseOption, X2jOptionsOptional {}
+
 export interface BodyOption extends BaseOption {
   /**
    * 解析 json 请求
@@ -48,6 +51,11 @@ export interface BodyOption extends BaseOption {
    * @default true
    */
   form?: FormOption | boolean;
+
+  /**
+   * 解析 XML 格式为 JS 对象
+   */
+  xml?: XMLOption | boolean;
 
   /**
    * 解析文本请求

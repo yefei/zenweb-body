@@ -5,7 +5,7 @@
   "exports": "./dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepublishOnly": "tsc --build --clean && tsc"
+    "prepublishOnly": "rm -fr dist && tsc"
   },
   "files": [
     "dist"
@@ -39,6 +39,7 @@
     "@types/formidable": "^2.0.0",
     "bytes": "^3.1.1",
     "co-body": "^6.1.0",
+    "fast-xml-parser": "^4.0.5",
     "formidable": "^2.0.1"
   }
 }
