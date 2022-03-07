@@ -67,7 +67,7 @@ export default function setup(opt?: BodyOption): SetupFunction {
             ctx.request.body = await coBody.form(ctx, opt.form);
             ctx.request.bodyType = 'form';
           }
-          else if (xmlparser && ctx.is('xml')) {
+          else if (xmlparser && ctx.is('xml', 'text/xml')) {
             ctx.request.body = xmlparser.parse(await coBody.text(ctx, xmlBaseOption));
             ctx.request.bodyType = 'xml';
           }
