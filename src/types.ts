@@ -34,7 +34,7 @@ export interface MultipartOption extends FormidableOptions {
    * 表单字段大小限制，除去文件部分
    * @default BaseOption.limit
    */
-  maxFieldsSize: number;
+  maxFieldsSize?: number;
 }
 
 export interface XMLOption extends BaseOption, X2jOptionsOptional {}
