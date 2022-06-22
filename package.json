@@ -19,7 +19,9 @@
     "app",
     "http",
     "framework",
-    "koa"
+    "koa",
+    "form",
+    "zenweb"
   ],
   "license": "MIT",
   "repository": {
