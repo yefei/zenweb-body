@@ -1,6 +1,5 @@
 import '@zenweb/log';
-import * as Koa from 'koa';
-import { SetupFunction } from '@zenweb/core';
+import { Context, SetupFunction } from '@zenweb/core';
 import * as coBody from 'co-body';
 import * as formidable from 'formidable';
 import { parse as bytesParse } from 'bytes';
@@ -21,7 +20,7 @@ const defaultOption: BodyOption = {
 
 type formidableResult = { fields: formidable.Fields, files: formidable.Files };
 
-function formidableParse(ctx: Koa.Context, opt: MultipartOption): Promise<formidableResult> {
+function formidableParse(ctx: Context, opt: MultipartOption): Promise<formidableResult> {
   const form = formidable(opt);
   return new Promise((resolve, reject) => {
     form.parse(ctx.req, (err, fields, files) => {
