@@ -6,13 +6,18 @@
 
 ## 演示
 ```ts
-import { Context, mapping, Body } from 'zenweb';
+import { Context, mapping, Body, BodyHelper } from 'zenweb';
 
 export class Controller {
   @mapping({ path: '/', method: 'POST' })
   post(body: Body) {
     console.log(body.type); // POST body 内容类型
     console.log(body.data); // POST Body 内容解析完成后的对象
+  }
+
+  @mapping({ path: '/', method: 'POST' })
+  post(body: BodyHelper) {
+    console.log(body.get({ age: '!int' })); // 类型转换&校验
   }
 }
 ```
@@ -44,12 +49,10 @@ export class Controller {
 |----|-----|-------|-----|
 | strict | boolean | true | 严格模式, 提交的内容必须为 {} 或 [] 开头 |
 
-#### FormOption extends BaseOption
-无其他配置项
-#### TextOption extends BaseOption
-无其他配置项
-
 ## Changelog
+
+### 3.1.0
+- 新增 BodyHelper 数据类型转换&校验
 
 ### 3.0.0
 使用依赖注入重构，去除 xml 和 文件上传表单支持，取消的这两个作为独立模块分离。

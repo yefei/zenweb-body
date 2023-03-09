@@ -26,6 +26,7 @@ export default function setup(opt?: BodyOption): SetupFunction {
     setup.debug('option: %o', opt);
     setup.assertModuleExists('inject');
     setup.assertModuleExists('result');
+    setup.assertModuleExists('helper');
     setup.core.injector.define(BodyOption, opt);
   }
 }

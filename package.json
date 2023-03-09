@@ -1,13 +1,13 @@
 {
   "name": "@zenweb/body",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Zenweb Body module",
   "exports": "./dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "rimraf dist && tsc",
     "prepublishOnly": "npm run build",
-    "dev": "cd test && cross-env DEBUG=* ts-node t1"
+    "dev": "cd example && cross-env DEBUG=* ts-node app"
   },
   "files": [
     "dist"
@@ -36,7 +36,9 @@
   "devDependencies": {
     "@types/co-body": "^6.1.0",
     "@zenweb/core": "^3.5.0",
+    "@zenweb/helper": "^3.2.0",
     "@zenweb/inject": "^3.18.0",
+    "@zenweb/messagecode": "^3.2.0",
     "@zenweb/result": "^3.0.0",
     "cross-env": "^7.0.3",
     "rimraf": "^4.4.0",

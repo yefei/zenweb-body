@@ -1,8 +1,10 @@
 /// <reference types="@zenweb/result" />
 import { Context } from '@zenweb/core';
-import { init, scope } from '@zenweb/inject';
+import { init, inject, scope } from '@zenweb/inject';
+import { TypeCastHelper } from '@zenweb/helper';
 import * as coBody from 'co-body';
 import { BodyOption, BodyType } from './types';
+import { TypeCastPickOption } from 'typecasts';
 
 /**
  * 请求 Body 数据解析
@@ -32,6 +34,16 @@ export class Body {
         message: option.errorMessage,
       });
     }
+  }
+}
+
+@scope('request')
+export class BodyHelper {
+  @inject typeCastHelper: TypeCastHelper;
+  @inject body: Body;
+
+  get<O extends TypeCastPickOption>(fields: O) {
+    return this.typeCastHelper.pick(this.body.data, fields);
   }
 }
 
