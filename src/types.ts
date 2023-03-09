@@ -1,8 +1,13 @@
-import { Options as FormidableOptions } from 'formidable';
-import { X2jOptionsOptional } from 'fast-xml-parser';
+import { scope } from '@zenweb/inject';
 
-export type Method = string | 'POST' | 'PUT' | 'PATCH' | 'GET' | 'HEAD' | 'DELETE';
+/**
+ * 内容类型
+ */
+export type BodyType = 'json' | 'form' | 'text' | 'unknown';
 
+/**
+ * 基础配置 - 子项配置的默认配置
+ */
 export interface BaseOption {
   /**
    * 编码
@@ -17,6 +22,9 @@ export interface BaseOption {
   limit?: string;
 }
 
+/**
+ * 解析 JSON 配置
+ */
 export interface JsonOption extends BaseOption {
   /**
    * 严格模式, 根必须为 {} 或 []
@@ -25,20 +33,19 @@ export interface JsonOption extends BaseOption {
   strict?: boolean;
 }
 
+/**
+ * 解析表单配置
+ */
 export interface FormOption extends BaseOption {}
 
+/**
+ * 解析文本配置
+ */
 export interface TextOption extends BaseOption {}
 
-export interface MultipartOption extends FormidableOptions {
-  /**
-   * 表单字段大小限制，除去文件部分
-   * @default BaseOption.limit
-   */
-  maxFieldsSize?: number;
-}
-
-export interface XMLOption extends BaseOption, X2jOptionsOptional {}
-
+/**
+ * Body 解析配置
+ */
 export interface BodyOption extends BaseOption {
   /**
    * 解析 json 请求
@@ -53,25 +60,34 @@ export interface BodyOption extends BaseOption {
   form?: FormOption | boolean;
 
   /**
-   * 解析 XML 格式为 JS 对象
-   */
-  xml?: XMLOption | boolean;
-
-  /**
    * 解析文本请求
    * @default true
    */
   text?: TextOption | boolean;
 
   /**
-   * 支持上传文件
-   * @default true
+   * 解析错误时输出错误代码
+   * - 默认无
    */
-  multipart?: MultipartOption | boolean;
+  errorCode?: number;
 
   /**
-   * 处理请求类型
-   * @default ['POST', 'PUT', 'PATCH']
+   * 解析错误时 HTTP Code
+   * @default 412
    */
-  methods?: Method[];
+  errorStatus?: number;
+
+  /**
+   * 解析错误时错误消息
+   * @default 'request body error'
+   */
+  errorMessage?: string;
+}
+
+/**
+ * Body 解析配置
+ */
+@scope('singleton')
+export abstract class BodyOption implements BodyOption {
+  // 影子类，注入识别使用
 }

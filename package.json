@@ -1,11 +1,13 @@
 {
   "name": "@zenweb/body",
-  "version": "2.5.0",
+  "version": "3.0.0",
   "description": "Zenweb Body module",
   "exports": "./dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "prepublishOnly": "rm -fr dist && tsc"
+    "build": "rimraf dist && tsc",
+    "prepublishOnly": "npm run build",
+    "dev": "cd test && cross-env DEBUG=* ts-node t1"
   },
   "files": [
     "dist"
@@ -32,17 +34,16 @@
     "url": "https://github.com/yefei/zenweb-body/issues"
   },
   "devDependencies": {
-    "@types/bytes": "^3.1.1",
     "@types/co-body": "^6.1.0",
-    "@zenweb/core": "^2.6.1",
-    "@zenweb/log": "^2.3.1",
+    "@zenweb/core": "^3.5.0",
+    "@zenweb/inject": "^3.18.0",
+    "@zenweb/result": "^3.0.0",
+    "cross-env": "^7.0.3",
+    "rimraf": "^4.4.0",
+    "ts-node": "^10.9.1",
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "@types/formidable": "^2.0.0",
-    "bytes": "^3.1.1",
-    "co-body": "^6.1.0",
-    "fast-xml-parser": "^4.0.5",
-    "formidable": "^2.0.1"
+    "co-body": "^6.1.0"
   }
 }

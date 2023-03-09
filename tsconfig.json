@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "target": "ES2019",
     "lib": [
       "ES2019"
@@ -12,8 +14,7 @@
     "outDir": "./dist"
   },
   "exclude": [
-    "node_modules",
-    "**/*.spec.ts"
+    "node_modules"
   ],
   "include": [
     "src/**/*"
