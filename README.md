@@ -51,6 +51,9 @@ export class Controller {
 
 ## Changelog
 
+### 3.1.1
+- null 检查
+
 ### 3.1.0
 - 新增 BodyHelper 数据类型转换&校验
 

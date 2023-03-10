@@ -14,12 +14,12 @@ export class Body {
   /**
    * 数据
    */
-  data: any;
+  data!: object | string;
 
   /**
    * 数据类型
    */
-  type: BodyType;
+  type!: BodyType;
 
   @init
   private async parse(option: BodyOption, ctx: Context) {
@@ -39,18 +39,20 @@ export class Body {
 
 @scope('request')
 export class BodyHelper {
-  @inject typeCastHelper: TypeCastHelper;
-  @inject body: Body;
+  @inject typeCastHelper!: TypeCastHelper;
+  @inject body!: Body;
 
   get<O extends TypeCastPickOption>(fields: O) {
-    return this.typeCastHelper.pick(this.body.data, fields);
+    // 忽略 text 类型
+    const data = typeof this.body.data === 'object' ? this.body.data : {};
+    return this.typeCastHelper.pick(data, fields);
   }
 }
 
 /**
  * 解析 body
  */
-export async function parseBody(opt: BodyOption, ctx: Context): Promise<{ data: any, type: BodyType }> {
+export async function parseBody(opt: BodyOption, ctx: Context): Promise<{ data: object | string, type: BodyType }> {
   if (typeof opt.json === 'object' && ctx.is('json')) {
     return {
       data: await coBody.json(ctx, opt.json),
