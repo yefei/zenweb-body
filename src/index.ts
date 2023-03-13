@@ -10,7 +10,6 @@ const defaultOption: BodyOption = {
   form: true,
   text: true,
   errorStatus: 412,
-  errorMessage: 'request body error',
 };
 
 export default function setup(opt?: BodyOption): SetupFunction {
@@ -27,6 +26,7 @@ export default function setup(opt?: BodyOption): SetupFunction {
     setup.assertModuleExists('inject');
     setup.assertModuleExists('result');
     setup.assertModuleExists('helper');
+    setup.core.messageCodeResolver.assign(require('../message-codes.json'));
     setup.core.injector.define(BodyOption, opt);
   }
 }

@@ -1,0 +1,4 @@
+{
+  "body.parse-error": "Body 内容错误",
+  "body.type-not-object": "Body 内容必须能被解析为对象。当前内容类型：{type}"
+}

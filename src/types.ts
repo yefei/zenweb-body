@@ -76,12 +76,6 @@ export interface BodyOption extends BaseOption {
    * @default 412
    */
   errorStatus?: number;
-
-  /**
-   * 解析错误时错误消息
-   * @default 'request body error'
-   */
-  errorMessage?: string;
 }
 
 /**
