@@ -15,7 +15,7 @@ export class Body {
   /**
    * 数据
    */
-  data!: object | string;
+  data!: unknown;
 
   /**
    * 数据类型
@@ -46,7 +46,7 @@ export class Body {
  */
 @scope('request')
 export class ObjectBody {
-  [key: string]: any;
+  [key: string]: unknown;
 
   @init
   private async [Symbol()](body: Body, ctx: Context, option: BodyOption) {

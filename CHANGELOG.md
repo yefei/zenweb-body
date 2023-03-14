@@ -1,5 +1,8 @@
 # Changelog
 
+## [3.2.1] - 2023-3-14
+- 修改: ObjectBody, Body.data 对象项目类型为 unknown
+
 ## [3.2.0] - 2023-3-13
 - 新增: ObjectBody 对象
 - 改进: 错误消息使用 messagecode 管理
