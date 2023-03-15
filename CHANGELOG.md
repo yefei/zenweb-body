@@ -1,5 +1,8 @@
 # Changelog
 
+## [3.2.2] - 2023-3-15
+- update: application/xml to text
+
 ## [3.2.1] - 2023-3-14
 - 修改: ObjectBody, Body.data 对象项目类型为 unknown
 

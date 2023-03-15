@@ -3,7 +3,7 @@ import inject from '@zenweb/inject';
 import result from '@zenweb/result';
 import messagecode from '@zenweb/messagecode';
 import helper from '@zenweb/helper';
-import body, { BodyHelper } from '../src';
+import body, { Body, BodyHelper } from '../src';
 
 const app = new Core();
 app.setup(result());
@@ -13,8 +13,8 @@ app.setup(helper());
 app.setup(body());
 app.setup(function test(setup) {
   setup.middleware(async ctx => {
-    const body = await ctx.injector.getInstance(BodyHelper);
-    ctx.body = body.get({ age: '!int' });
+    const body = await ctx.injector.getInstance(Body);
+    ctx.body = body;
   });
 })
 app.start();

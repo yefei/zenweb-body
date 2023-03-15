@@ -92,7 +92,7 @@ export async function parseBody(opt: BodyOption, ctx: Context): Promise<{ data: 
       type: 'form',
     };
   }
-  if (typeof opt.text === 'object' && ctx.is('text/*')) {
+  if (typeof opt.text === 'object' && ctx.is('text/*', 'application/xml')) {
     return {
       data: await coBody.text(ctx, opt.text),
       type: 'text',
