@@ -21,7 +21,7 @@ export class RawBody {
 
   @init
   private async [Symbol()](option: BodyOption, ctx: Context) {
-    if (ctx.request.length === 0) {
+    if (!ctx.request.length) {
       return;
     }
     this.data = await streamReader(ctx, option.limit, option.inflate);
@@ -35,21 +35,16 @@ export class RawBody {
 export class TextBody {
   data?: string;
 
-  // 先检查类型
-  @init
-  private [Symbol()](option: BodyOption, ctx: Context) {
-    if (option.textTypes && !ctx.is(...option.textTypes)) {
-      throw httpError(415, 'unsupported type "' + ctx.request.type + '"', {
-        type: 'type.unsupported',
-      });
-    }
-  }
-
   // 再解析数据
   @init
   private async [Symbol()](option: BodyOption, ctx: Context, raw: RawBody) {
     if (!raw.data) {
       return;
+    }
+    if (!option.textTypes?.length || !ctx.is(...option.textTypes)) {
+      throw httpError(415, 'unsupported type "' + ctx.request.type + '"', {
+        type: 'type.unsupported',
+      });
     }
     const encoding = ctx.request.charset || option.encoding || 'utf-8';
     if (!iconv.encodingExists(encoding)) {
@@ -93,11 +88,17 @@ export class Body {
     }
     if (opt.json && ctx.is('json')) {
       if (!strictJSONReg.test(text.data)) {
-        throw httpError(415, 'invalid JSON, only supports object and array', {
+        throw httpError(415, 'invalid JSON, only supports object or array', {
           type: 'json.strict',
         });
       }
-      this.data = JSON.parse(text.data);
+      try {
+        this.data = JSON.parse(text.data);
+      } catch (err: any) {
+        throw httpError(400, err.message, {
+          type: 'json.parse-error',
+        });
+      }
       this.type = 'json';
     } else if (opt.form && ctx.is('urlencoded')) {
       this.data = querystring.parse(text.data);
@@ -113,7 +114,7 @@ export class Body {
  * 请求 Body 数据解析为对象本身，请求内容必须为 json 或 form-urlencoded
  * - 注意：数据的解析并不要求客户端传递有效的头信息，如果客户端传递了有效的头信息但是内容没有被正确解析才会抛出异常，
  * 也就是说，客户端可以不传值，对象本身就是一个空对象
- * - 如果客户端传递了 text 类型，因为无法解析也会抛出异常: `body.type-not-object`
+ * - 如果客户端传递了 text 类型，因为无法解析也会抛出异常
  */
 @scope('request')
 export class ObjectBody {
