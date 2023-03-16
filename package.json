@@ -10,8 +10,7 @@
     "dev": "cd example && cross-env DEBUG=* ts-node app"
   },
   "files": [
-    "dist",
-    "message-codes.json"
+    "dist"
   ],
   "author": {
     "name": "YeFei",
