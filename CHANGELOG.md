@@ -1,5 +1,10 @@
 # Changelog
 
+## [3.3.0] - 2023-3-16
+- 重写内容解析逻辑
+- 新增: TextBody 和 RawBody 注入类型
+- 修改: 配置项简化，不再使用 ctx.fail 输出错误，而是使用标准 httpError
+
 ## [3.2.2] - 2023-3-15
 - update: application/xml to text
 

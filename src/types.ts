@@ -3,7 +3,7 @@ import { scope } from '@zenweb/inject';
 /**
  * 内容类型
  */
-export type BodyType = 'json' | 'form' | 'text' | 'unknown' | 'none';
+export type BodyType = 'json' | 'form' | 'text' | 'none';
 
 /**
  * Body 解析配置
@@ -32,7 +32,7 @@ export interface BodyOption {
    * 如果需要使用 json form 等对象解析必须要设置
    * @default ['text/*', 'json', 'application/xml', 'urlencoded']
    */
-  text?: string[];
+  textTypes?: string[];
 
   /**
    * 解析 json 请求
@@ -45,18 +45,6 @@ export interface BodyOption {
    * @default true
    */
   form?: boolean;
-
-  /**
-   * 解析错误时输出错误代码
-   * - 默认无
-   */
-  errorCode?: number;
-
-  /**
-   * 解析错误时 HTTP Code
-   * @default 415
-   */
-  errorStatus?: number;
 }
 
 /**

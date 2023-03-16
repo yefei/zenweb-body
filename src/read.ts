@@ -1,4 +1,4 @@
-import * as createError from 'http-errors';
+import * as httpError from 'http-errors';
 import * as zlib from 'node:zlib';
 import { Readable } from 'node:stream';
 import { Context } from '@zenweb/core';
@@ -12,7 +12,7 @@ export function streamReader(ctx: Context, limit?: number, inflate = true) {
   // 长度检查
   const length = ctx.request.length;
   if (limit && length && length > limit) {
-    throw createError(413, 'request entity too large', {
+    throw httpError(413, 'request entity too large', {
       expected: length,
       length: length,
       limit: limit,
@@ -23,7 +23,7 @@ export function streamReader(ctx: Context, limit?: number, inflate = true) {
   // 内容格式检查
   const encoding = (ctx.get('content-encoding') || 'identity').toLowerCase();
   if (inflate === false && encoding !== 'identity') {
-    throw createError(415, 'content encoding unsupported', {
+    throw httpError(415, 'content encoding unsupported', {
       encoding: encoding,
       type: 'encoding.unsupported',
     });
@@ -44,14 +44,14 @@ export function streamReader(ctx: Context, limit?: number, inflate = true) {
     req.pipe(s);
     stream = s;
   } else {
-    throw createError(415, 'unsupported content encoding "' + encoding + '"', {
+    throw httpError(415, 'unsupported content encoding "' + encoding + '"', {
       encoding: encoding,
       type: 'encoding.unsupported',
     });
   }
 
   if (!stream.readable) {
-    throw createError(500, 'stream is not readable', {
+    throw httpError(500, 'stream is not readable', {
       type: 'stream.not.readable',
     });
   }
@@ -63,7 +63,7 @@ export function streamReader(ctx: Context, limit?: number, inflate = true) {
 
     function onAborted() {
       if (complete) return;
-      done(createError(400, 'request aborted', {
+      done(httpError(400, 'request aborted', {
         code: 'ECONNABORTED',
         expected: length,
         length: length,
@@ -76,7 +76,7 @@ export function streamReader(ctx: Context, limit?: number, inflate = true) {
       if (complete) return;
       received += chunk.length;
       if (limit && received > limit) {
-        done(createError(413, 'request entity too large', {
+        done(httpError(413, 'request entity too large', {
           limit: limit,
           received: received,
           type: 'entity.too.large',
@@ -90,7 +90,7 @@ export function streamReader(ctx: Context, limit?: number, inflate = true) {
       if (complete) return;
       if (err) return done(err);
       if (length && received !== length) {
-        done(createError(400, 'request size did not match content length', {
+        done(httpError(400, 'request size did not match content length', {
           expected: length,
           length: length,
           received: received,

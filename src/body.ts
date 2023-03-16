@@ -1,10 +1,9 @@
-/// <reference types="@zenweb/result" />
 import { Context } from '@zenweb/core';
 import { init, inject, scope } from '@zenweb/inject';
 import { TypeCastHelper } from '@zenweb/helper';
 import * as querystring from 'querystring';
 import * as iconv from 'iconv-lite';
-import * as createError from 'http-errors';
+import * as httpError from 'http-errors';
 import { BodyOption, BodyType } from './types';
 import { TypeCastPickOption } from 'typecasts';
 import { streamReader } from './read';
@@ -34,13 +33,13 @@ export class RawBody {
  */
 @scope('request')
 export class TextBody {
-  data!: string;
+  data?: string;
 
   // 先检查类型
   @init
   private [Symbol()](option: BodyOption, ctx: Context) {
-    if (option.text && !ctx.is(...option.text)) {
-      throw createError(415, 'unsupported type "' + ctx.request.type + '"', {
+    if (option.textTypes && !ctx.is(...option.textTypes)) {
+      throw httpError(415, 'unsupported type "' + ctx.request.type + '"', {
         type: 'type.unsupported',
       });
     }
@@ -50,21 +49,21 @@ export class TextBody {
   @init
   private async [Symbol()](option: BodyOption, ctx: Context, raw: RawBody) {
     if (!raw.data) {
-      this.data = '';
       return;
     }
     const encoding = ctx.request.charset || option.encoding || 'utf-8';
     if (!iconv.encodingExists(encoding)) {
-      throw createError(415, 'unsupported charset "' + encoding.toUpperCase() + '"', {
+      throw httpError(415, 'unsupported charset "' + encoding.toUpperCase() + '"', {
         charset: encoding.toLowerCase(),
         type: 'charset.unsupported',
       });
     }
     try {
       this.data = iconv.decode(raw.data, encoding);
-    } catch (err: any) {
-      throw createError(400, err, {
-        type: 'decode.failed'
+    } catch {
+      throw httpError(400, 'decode charset failed', {
+        charset: encoding.toLowerCase(),
+        type: 'decode.failed',
       });
     }
   }
@@ -79,7 +78,7 @@ export class Body {
   /**
    * 解析出的数据
    */
-  data!: unknown;
+  data?: unknown;
 
   /**
    * 数据类型
@@ -94,7 +93,7 @@ export class Body {
     }
     if (opt.json && ctx.is('json')) {
       if (!strictJSONReg.test(text.data)) {
-        throw createError(415, 'invalid JSON, only supports object and array', {
+        throw httpError(415, 'invalid JSON, only supports object and array', {
           type: 'json.strict',
         });
       }
@@ -121,12 +120,10 @@ export class ObjectBody {
   [key: string]: unknown;
 
   @init
-  private async [Symbol()](body: Body, ctx: Context, option: BodyOption) {
+  private async [Symbol()](body: Body) {
     if (body.type === 'text') {
-      ctx.fail({
-        code: option.errorCode,
-        status: option.errorStatus,
-        message: ctx.core.messageCodeResolver.format('body.type-not-object', { type: body.type }),
+      throw httpError(400, 'only supports JSON or form-urlencoded', {
+        type: 'object.only',
       });
     }
     if (body.data) {
