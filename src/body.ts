@@ -2,9 +2,73 @@
 import { Context } from '@zenweb/core';
 import { init, inject, scope } from '@zenweb/inject';
 import { TypeCastHelper } from '@zenweb/helper';
-import * as coBody from 'co-body';
+import * as querystring from 'querystring';
+import * as iconv from 'iconv-lite';
+import * as createError from 'http-errors';
 import { BodyOption, BodyType } from './types';
 import { TypeCastPickOption } from 'typecasts';
+import { streamReader } from './read';
+
+// Allowed whitespace is defined in RFC 7159
+// http://www.rfc-editor.org/rfc/rfc7159.txt
+const strictJSONReg = /^[\x20\x09\x0a\x0d]*(\[|\{)/;
+
+/**
+ * 原始请求内容-经过解压，未经过文字编码转换
+ */
+@scope('request')
+export class RawBody {
+  data?: Buffer;
+
+  @init
+  private async [Symbol()](option: BodyOption, ctx: Context) {
+    if (ctx.request.length === 0) {
+      return;
+    }
+    this.data = await streamReader(ctx, option.limit, option.inflate);
+  }
+}
+
+/**
+ *  文本内容，经过文字编码转换
+ */
+@scope('request')
+export class TextBody {
+  data!: string;
+
+  // 先检查类型
+  @init
+  private [Symbol()](option: BodyOption, ctx: Context) {
+    if (option.text && !ctx.is(...option.text)) {
+      throw createError(415, 'unsupported type "' + ctx.request.type + '"', {
+        type: 'type.unsupported',
+      });
+    }
+  }
+
+  // 再解析数据
+  @init
+  private async [Symbol()](option: BodyOption, ctx: Context, raw: RawBody) {
+    if (!raw.data) {
+      this.data = '';
+      return;
+    }
+    const encoding = ctx.request.charset || option.encoding || 'utf-8';
+    if (!iconv.encodingExists(encoding)) {
+      throw createError(415, 'unsupported charset "' + encoding.toUpperCase() + '"', {
+        charset: encoding.toLowerCase(),
+        type: 'charset.unsupported',
+      });
+    }
+    try {
+      this.data = iconv.decode(raw.data, encoding);
+    } catch (err: any) {
+      throw createError(400, err, {
+        type: 'decode.failed'
+      });
+    }
+  }
+}
 
 /**
  * 请求 Body 数据解析
@@ -13,7 +77,7 @@ import { TypeCastPickOption } from 'typecasts';
 @scope('request')
 export class Body {
   /**
-   * 数据
+   * 解析出的数据
    */
   data!: unknown;
 
@@ -23,17 +87,25 @@ export class Body {
   type!: BodyType;
 
   @init
-  private async [Symbol()](option: BodyOption, ctx: Context) {
-    try {
-      const result = await parseBody(option, ctx);
-      this.data = result.data;
-      this.type = result.type;
-    } catch (err) {
-      ctx.fail({
-        code: option.errorCode,
-        status: option.errorStatus,
-        message: ctx.core.messageCodeResolver.format('body.parse-error', { err }),
-      });
+  private async [Symbol()](opt: BodyOption, ctx: Context, text: TextBody) {
+    if (!text.data) {
+      this.type = 'none';
+      return;
+    }
+    if (opt.json && ctx.is('json')) {
+      if (!strictJSONReg.test(text.data)) {
+        throw createError(415, 'invalid JSON, only supports object and array', {
+          type: 'json.strict',
+        });
+      }
+      this.data = JSON.parse(text.data);
+      this.type = 'json';
+    } else if (opt.form && ctx.is('urlencoded')) {
+      this.data = querystring.parse(text.data);
+      this.type = 'form';
+    } else {
+      this.data = text.data;
+      this.type = 'text';
     }
   }
 }
@@ -57,7 +129,7 @@ export class ObjectBody {
         message: ctx.core.messageCodeResolver.format('body.type-not-object', { type: body.type }),
       });
     }
-    if (body.type !== 'unknown') {
+    if (body.data) {
       Object.assign(this, body.data);
     }
   }
@@ -74,29 +146,4 @@ export class BodyHelper {
   get<O extends TypeCastPickOption>(fields: O) {
     return this.typeCastHelper.pick(this.data, fields);
   }
-}
-
-/**
- * 解析 body
- */
-export async function parseBody(opt: BodyOption, ctx: Context): Promise<{ data: object | string, type: BodyType }> {
-  if (typeof opt.json === 'object' && ctx.is('json')) {
-    return {
-      data: await coBody.json(ctx, opt.json),
-      type: 'json',
-    };
-  }
-  if (typeof opt.form === 'object' && ctx.is('urlencoded')) {
-    return {
-      data: await coBody.form(ctx, opt.form),
-      type: 'form',
-    };
-  }
-  if (typeof opt.text === 'object' && ctx.is('text/*', 'application/xml')) {
-    return {
-      data: await coBody.text(ctx, opt.text),
-      type: 'text',
-    };
-  }
-  return { data: {}, type: 'unknown' };
 }

@@ -3,67 +3,48 @@ import { scope } from '@zenweb/inject';
 /**
  * 内容类型
  */
-export type BodyType = 'json' | 'form' | 'text' | 'unknown';
+export type BodyType = 'json' | 'form' | 'text' | 'unknown' | 'none';
 
 /**
- * 基础配置 - 子项配置的默认配置
+ * Body 解析配置
  */
-export interface BaseOption {
+export interface BodyOption {
   /**
-   * 编码
+   * 默认编码
    * @default 'utf-8'
    */
   encoding?: string;
 
   /**
-   * 大小限制
-   * @default '1mb'
+   * 大小限制 bytes
+   * @default 1024 * 1024
    */
-  limit?: string;
-}
+  limit?: number;
 
-/**
- * 解析 JSON 配置
- */
-export interface JsonOption extends BaseOption {
   /**
-   * 严格模式, 根必须为 {} 或 []
+   * 是否支持压缩内容
    * @default true
    */
-  strict?: boolean;
-}
+  inflate?: boolean;
 
-/**
- * 解析表单配置
- */
-export interface FormOption extends BaseOption {}
+  /**
+   * 支持解析为文本的类型
+   * 如果需要使用 json form 等对象解析必须要设置
+   * @default ['text/*', 'json', 'application/xml', 'urlencoded']
+   */
+  text?: string[];
 
-/**
- * 解析文本配置
- */
-export interface TextOption extends BaseOption {}
-
-/**
- * Body 解析配置
- */
-export interface BodyOption extends BaseOption {
   /**
    * 解析 json 请求
    * @default true
    */
-  json?: JsonOption | boolean;
+  json?: boolean;
 
   /**
    * 解析表单请求
    * @default true
    */
-  form?: FormOption | boolean;
-
-  /**
-   * 解析文本请求
-   * @default true
-   */
-  text?: TextOption | boolean;
+  form?: boolean;
 
   /**
    * 解析错误时输出错误代码
@@ -73,7 +54,7 @@ export interface BodyOption extends BaseOption {
 
   /**
    * 解析错误时 HTTP Code
-   * @default 412
+   * @default 415
    */
   errorStatus?: number;
 }

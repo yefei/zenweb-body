@@ -35,7 +35,6 @@
     "url": "https://github.com/yefei/zenweb-body/issues"
   },
   "devDependencies": {
-    "@types/co-body": "^6.1.0",
     "@zenweb/core": "^3.5.0",
     "@zenweb/helper": "^3.2.0",
     "@zenweb/inject": "^3.18.0",
@@ -47,6 +46,7 @@
     "typescript": "^4.9.5"
   },
   "dependencies": {
-    "co-body": "^6.1.0"
+    "http-errors": "^2.0.0",
+    "iconv-lite": "^0.6.3"
   }
 }
