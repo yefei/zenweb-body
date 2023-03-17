@@ -1,9 +1,11 @@
+import { scope } from '@zenweb/inject';
 import * as httpError from 'http-errors';
 import * as querystring from 'querystring';
 
 /**
  * 请求数据解析器基类
  */
+@scope('singleton')
 export abstract class BodyParser {
   /**
    * 是否为对象化的数据，可以被转换为 `ObjectBody`

@@ -3,7 +3,7 @@ import { init, inject, scope } from '@zenweb/inject';
 import { TypeCastHelper } from '@zenweb/helper';
 import * as iconv from 'iconv-lite';
 import * as httpError from 'http-errors';
-import { BodyOption, LOADED_PARSES } from './types';
+import { BodyOption } from './types';
 import { TypeCastPickOption } from 'typecasts';
 import { streamReader } from './read';
 import { BodyParser, RawBodyParser, TextBodyParser } from './parse';
@@ -86,8 +86,9 @@ export class Body {
   @init
   private async [Symbol()](opt: BodyOption, ctx: Context) {
     // 匹配内容解析器
-    if (opt[LOADED_PARSES]) {
-      for (const parser of opt[LOADED_PARSES]) {
+    if (opt.parses) {
+      for (const parserClass of opt.parses) {
+        const parser = await ctx.injector.getInstance(parserClass);
         const type = ctx.is(parser.types);
         if (type) {
           this.type = type;

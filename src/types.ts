@@ -1,10 +1,8 @@
 import { scope } from '@zenweb/inject';
-import { BodyParser, RawBodyParser, TextBodyParser } from './parse';
-
-export const LOADED_PARSES = Symbol();
+import { RawBodyParser, TextBodyParser } from './parse';
 
 export interface BodyParserClass {
-  new (opt: BodyOption): RawBodyParser | TextBodyParser;
+  new (): RawBodyParser | TextBodyParser;
 }
 
 /**
@@ -40,17 +38,12 @@ export interface BodyOption {
    * @default [JSONParser, URLEncodedParser]
    */
   parses?: BodyParserClass[];
-
-  /**
-   * 已经载入的解析器 - 内部使用
-   */
-  [LOADED_PARSES]?: BodyParser[];
 }
 
 /**
  * Body 解析配置
  */
 @scope('singleton')
-export abstract class BodyOption implements BodyOption {
+export class BodyOption implements BodyOption {
   // 影子类，注入识别使用
 }

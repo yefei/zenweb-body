@@ -1,12 +1,13 @@
 {
   "name": "@zenweb/body",
-  "version": "3.4.0",
+  "version": "3.5.0",
   "description": "Zenweb Body module",
   "exports": "./dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "rimraf dist && tsc",
     "prepublishOnly": "npm run build",
+    "bench": "cd example && ts-node app",
     "dev": "cd example && cross-env DEBUG=* ts-node app"
   },
   "files": [

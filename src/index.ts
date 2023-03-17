@@ -1,6 +1,6 @@
 import { SetupFunction } from '@zenweb/core';
 import { JSONParser, RawBodyParser, TextBodyParser, URLEncodedParser } from './parse';
-import { BodyOption, LOADED_PARSES } from './types';
+import { BodyOption } from './types';
 export * from './types';
 export * from './body';
 export * from './parse';
@@ -18,18 +18,16 @@ export default function setup(opt?: BodyOption): SetupFunction {
   return function body(setup) {
     setup.debug('option: %o', opt);
     setup.assertModuleExists('inject');
-    setup.assertModuleExists('result');
     setup.assertModuleExists('helper');
     setup.core.injector.define(BodyOption, opt);
     // 在初始化后期执行解析器载入工作，方便其他模块添加解析器
-    setup.after(() => {
+    setup.after(async () => {
       // 载入解析器
       if (opt?.parses) {
         if (!opt.textTypes) opt.textTypes = [];
-        opt[LOADED_PARSES] = [];
         for (const parserClass of opt.parses) {
           setup.debug('init parser: %o', parserClass);
-          const parser = new parserClass(opt);
+          const parser = await setup.core.injector.getInstance(parserClass);
           if (parser instanceof TextBodyParser) {
             setup.debug('add textTypes: %o', parser.types);
             for (const type of parser.types) {
@@ -41,7 +39,6 @@ export default function setup(opt?: BodyOption): SetupFunction {
           } else {
             throw new Error('unknonw parser type: ' + parser);
           }
-          opt[LOADED_PARSES].push(parser);
         }
         setup.debug('all textTypes: %o', opt.textTypes);
       }
