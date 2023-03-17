@@ -2,7 +2,7 @@
 
 [ZenWeb](https://www.npmjs.com/package/zenweb)
 
-支持 JSON、Form 表单解析
+支持 JSON、Form 等内容格式的基础解析模块
 
 ## 演示
 ```ts
@@ -12,7 +12,7 @@ export class Controller {
   @mapping({ path: '/', method: 'POST' })
   post(body: Body) {
     console.log(body.type); // POST body 内容类型
-    console.log(body.data); // POST Body 内容解析完成后的对象
+    console.log(body.data); // POST Body 内容解析完成后的数据
   }
 
   @mapping({ path: '/', method: 'POST' })
@@ -22,29 +22,21 @@ export class Controller {
 }
 ```
 
-## 支持的内容格式
-通过客户端提交的 Content-Type 头信息判断内容格式
+## 内置的对象内容解析器
 
-- json: json
-- x-www-form-urlencoded: form
-- text/*: text
+- json
+- x-www-form-urlencoded
 
 ## 配置项
 
-### 主配置 BodyOption
 | 项 | 类型 | 默认值 | 说明 |
 |----|-----|-------|-----|
-| json | JsonOption \| boolean | true | 解析 json 格式 |
-| form | FormOption \| boolean | true | 解析表单请求 |
-| text | TextOption \| boolean | true | 解析纯文本 |
+| encoding | string | 'utf-8' | 在未能匹配到 header 信息时，默认text内容编码格式 |
+| limit | number | 1MB | 内容大小限制 |
+| inflate | boolean | true | 是否支持压缩内容解压 |
+| textTypes | string[] | ['text/*', 'json', '+json', 'xml', '+xml', 'urlencoded'] | 支持解析为文本的类型 |
+| parses | BodyParserClass[] | [JSONParser, URLEncodedParser] | 对象解析器 |
 
-#### BaseOption
-| 项 | 类型 | 默认值 | 说明 |
-|----|-----|-------|-----|
-| encoding | string | 'utf-8' | 内容编码 |
-| limit | string | '1mb' | 内容大小限制 |
+## 其他扩展格式解析
 
-#### JsonOption extends BaseOption
-| 项 | 类型 | 默认值 | 说明 |
-|----|-----|-------|-----|
-| strict | boolean | true | 严格模式, 提交的内容必须为 {} 或 [] 开头 |
+[xml](https://www.npmjs.com/package/@zenweb/xml-body)

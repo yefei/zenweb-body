@@ -1,9 +1,11 @@
 import { scope } from '@zenweb/inject';
+import { BodyParser, RawBodyParser, TextBodyParser } from './parse';
 
-/**
- * 内容类型
- */
-export type BodyType = 'json' | 'form' | 'text' | 'none';
+export const LOADED_PARSES = Symbol();
+
+export interface BodyParserClass {
+  new (opt: BodyOption): RawBodyParser | TextBodyParser;
+}
 
 /**
  * Body 解析配置
@@ -29,22 +31,20 @@ export interface BodyOption {
 
   /**
    * 支持解析为文本的类型
-   * 如果需要使用 json form 等对象解析必须要设置
-   * @default ['text/*', 'json', 'application/xml', 'urlencoded']
+   * @default ['text/*', 'json', '+json', 'xml', '+xml', 'urlencoded']
    */
   textTypes?: string[];
 
   /**
-   * 解析 json 请求
-   * @default true
+   * 数据解析器
+   * @default [JSONParser, URLEncodedParser]
    */
-  json?: boolean;
+  parses?: BodyParserClass[];
 
   /**
-   * 解析表单请求
-   * @default true
+   * 已经载入的解析器 - 内部使用
    */
-  form?: boolean;
+  [LOADED_PARSES]?: BodyParser[];
 }
 
 /**

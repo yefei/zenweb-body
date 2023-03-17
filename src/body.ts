@@ -1,16 +1,12 @@
 import { Context } from '@zenweb/core';
 import { init, inject, scope } from '@zenweb/inject';
 import { TypeCastHelper } from '@zenweb/helper';
-import * as querystring from 'querystring';
 import * as iconv from 'iconv-lite';
 import * as httpError from 'http-errors';
-import { BodyOption, BodyType } from './types';
+import { BodyOption, LOADED_PARSES } from './types';
 import { TypeCastPickOption } from 'typecasts';
 import { streamReader } from './read';
-
-// Allowed whitespace is defined in RFC 7159
-// http://www.rfc-editor.org/rfc/rfc7159.txt
-const strictJSONReg = /^[\x20\x09\x0a\x0d]*(\[|\{)/;
+import { BodyParser, RawBodyParser, TextBodyParser } from './parse';
 
 /**
  * 原始请求内容-经过解压，未经过文字编码转换
@@ -41,7 +37,7 @@ export class TextBody {
     if (!raw.data) {
       return;
     }
-    if (!option.textTypes?.length || !ctx.is(...option.textTypes)) {
+    if (!option.textTypes?.length || !ctx.is(option.textTypes)) {
       throw httpError(415, 'unsupported type "' + ctx.request.type + '"', {
         type: 'type.unsupported',
       });
@@ -65,8 +61,7 @@ export class TextBody {
 }
 
 /**
- * 请求 Body 数据解析
- * - 解析异常则会抛出: `body.parse-error`
+ * 请求 Body 数据解析 - 混合解析器
  */
 @scope('request')
 export class Body {
@@ -77,44 +72,61 @@ export class Body {
 
   /**
    * 数据类型
+   * - 如果匹配解析器中支持的类型则返回匹配的类型
+   * - 如果没有匹配的解析器，但是匹配了 `textTypes` 则统一为 `text` 类型
+   * - 最后尝试解析为 `raw` 类型
    */
-  type!: BodyType;
+  type?: 'raw' | 'text' | string;
+
+  /**
+   * 匹配的解析器
+   */
+  parser?: BodyParser;
 
   @init
-  private async [Symbol()](opt: BodyOption, ctx: Context, text: TextBody) {
-    if (!text.data) {
-      this.type = 'none';
+  private async [Symbol()](opt: BodyOption, ctx: Context) {
+    // 匹配内容解析器
+    if (opt[LOADED_PARSES]) {
+      for (const parser of opt[LOADED_PARSES]) {
+        const type = ctx.is(parser.types);
+        if (type) {
+          this.type = type;
+          this.parser = parser;
+          if (parser instanceof TextBodyParser) {
+            const textBody = await ctx.injector.getInstance(TextBody);
+            if (textBody.data) {
+              this.data = await parser.parse(textBody.data);
+            }
+          } else if (parser instanceof RawBodyParser) {
+            const rawBody = await ctx.injector.getInstance(RawBody);
+            if (rawBody.data) {
+              this.data = await parser.parse(rawBody.data);
+            }
+          }
+          return;
+        }
+      }
+    }
+
+    // 没有匹配的解析器则尝试解析文本类型
+    if (opt.textTypes && ctx.is(opt.textTypes)) {
+      this.data = (await ctx.injector.getInstance(TextBody)).data;
+      this.type = 'text';
       return;
     }
-    if (opt.json && ctx.is('json')) {
-      if (!strictJSONReg.test(text.data)) {
-        throw httpError(415, 'invalid JSON, only supports object or array', {
-          type: 'json.strict',
-        });
-      }
-      try {
-        this.data = JSON.parse(text.data);
-      } catch (err: any) {
-        throw httpError(400, err.message, {
-          type: 'json.parse-error',
-        });
-      }
-      this.type = 'json';
-    } else if (opt.form && ctx.is('urlencoded')) {
-      this.data = querystring.parse(text.data);
-      this.type = 'form';
-    } else {
-      this.data = text.data;
-      this.type = 'text';
+
+    // 否则解析为 Raw
+    const raw = await ctx.injector.getInstance(RawBody);
+    if (raw.data) {
+      this.data = raw.data;
+      this.type = 'raw';
     }
   }
 }
 
 /**
  * 请求 Body 数据解析为对象本身，请求内容必须为 json 或 form-urlencoded
- * - 注意：数据的解析并不要求客户端传递有效的头信息，如果客户端传递了有效的头信息但是内容没有被正确解析才会抛出异常，
- * 也就是说，客户端可以不传值，对象本身就是一个空对象
- * - 如果客户端传递了 text 类型，因为无法解析也会抛出异常
+ * - 注意：数据不是必须的，但是如果传递的数据是不能被正确解析为对象化的将会抛出异常
  */
 @scope('request')
 export class ObjectBody {
@@ -122,14 +134,13 @@ export class ObjectBody {
 
   @init
   private async [Symbol()](body: Body) {
-    if (body.type === 'text') {
-      throw httpError(400, 'only supports JSON or form-urlencoded', {
-        type: 'object.only',
+    if (!body.data) return;
+    if (!body.parser?.objected) {
+      throw httpError(400, 'only supports objected format: JSON or urlencoded', {
+        type: 'objected.only',
       });
     }
-    if (body.data) {
-      Object.assign(this, body.data);
-    }
+    Object.assign(this, body.data);
   }
 }
 
