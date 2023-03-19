@@ -25,7 +25,7 @@ export class RawBody {
 }
 
 /**
- *  文本内容，经过文字编码转换
+ * 文本内容，经过文字编码转换
  */
 @scope('request')
 export class TextBody {
@@ -33,15 +33,15 @@ export class TextBody {
 
   // 再解析数据
   @init
-  private async [Symbol()](option: BodyOption, ctx: Context, raw: RawBody) {
-    if (!raw.data) {
+  private async [Symbol()](option: BodyOption, ctx: Context) {
+    // 是否是支持的类型
+    if (!option.textTypes?.length || !ctx.is(option.textTypes)) {
+      // throw httpError(415, 'unsupported type "' + ctx.request.type + '"', {
+      //   type: 'type.unsupported',
+      // });
       return;
     }
-    if (!option.textTypes?.length || !ctx.is(option.textTypes)) {
-      throw httpError(415, 'unsupported type "' + ctx.request.type + '"', {
-        type: 'type.unsupported',
-      });
-    }
+    // 是否满足编码转换
     const encoding = ctx.request.charset || option.encoding || 'utf-8';
     if (!iconv.encodingExists(encoding)) {
       throw httpError(415, 'unsupported charset "' + encoding.toUpperCase() + '"', {
@@ -49,6 +49,12 @@ export class TextBody {
         type: 'charset.unsupported',
       });
     }
+    // 读取数据
+    const raw = await ctx.injector.getInstance(RawBody);
+    if (!raw.data) {
+      return;
+    }
+    // 编码转换
     try {
       this.data = iconv.decode(raw.data, encoding);
     } catch {
