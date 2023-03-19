@@ -80,9 +80,8 @@ export class Body {
    * 数据类型
    * - 如果匹配解析器中支持的类型则返回匹配的类型
    * - 如果没有匹配的解析器，但是匹配了 `textTypes` 则统一为 `text` 类型
-   * - 最后尝试解析为 `raw` 类型
    */
-  type?: 'raw' | 'text' | string;
+  type?: 'text' | string;
 
   /**
    * 匹配的解析器
@@ -122,12 +121,13 @@ export class Body {
       return;
     }
 
-    // 否则解析为 Raw
-    const raw = await ctx.injector.getInstance(RawBody);
-    if (raw.data) {
-      this.data = raw.data;
-      this.type = 'raw';
-    }
+    // 2023-3-19: 
+    // - 不解析为 raw。对于文件上传和Body共同使用的场景下，一般来说是不需要再读取流的，浪费内存，如果真的需要直接使用 RawBody 即可
+    // const raw = await ctx.injector.getInstance(RawBody);
+    // if (raw.data) {
+    //   this.data = raw.data;
+    //   this.type = 'raw';
+    // }
   }
 }
 
