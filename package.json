@@ -1,6 +1,6 @@
 {
   "name": "@zenweb/body",
-  "version": "3.6.0",
+  "version": "3.6.1",
   "description": "Zenweb Body module",
   "exports": "./dist/index.js",
   "types": "dist/index.d.ts",

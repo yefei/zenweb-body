@@ -1,6 +1,6 @@
 import * as httpError from 'http-errors';
-import * as zlib from 'node:zlib';
-import { Readable } from 'node:stream';
+import * as zlib from 'zlib';
+import { Readable } from 'stream';
 import { Context } from '@zenweb/core';
 
 /**
